@@ -77,8 +77,8 @@
         
         .key-input {
             width: 100%; padding: 12px; background: rgba(0,0,0,0.6); border: 1px solid #444; border-radius: 10px;
-            color: var(--gold); font-family: 'Orbitron', sans-serif; font-size: 10px; text-align: center; letter-spacing: 0px;
-            position: relative; z-index: 1; outline: none; transition: 0.3s; word-break: break-all;
+            color: var(--gold); font-family: 'Orbitron', sans-serif; font-size: 12px; text-align: center; letter-spacing: 1px;
+            position: relative; z-index: 1; outline: none; transition: 0.3s;
         }
         .key-input:focus { border-color: var(--gold); box-shadow: 0 0 15px rgba(212, 175, 55, 0.3); }
 
@@ -177,11 +177,11 @@
     <div id="lock-screen">
         <div class="lock-icon">🔒</div>
         <div class="lock-title">BINARY ACCESS</div>
-        <div class="lock-desc">Vui lòng nhập dãy Key Nhị Phân để sử dụng Tool.</div>
+        <div class="lock-desc">Vui lòng nhập Key bản quyền để sử dụng Tool.</div>
         
-        <input type="text" id="keyInput" class="key-input" placeholder="Nhập 96 ký tự nhị phân (0 và 1)..." autocomplete="off">
+        <input type="text" id="keyInput" class="key-input" placeholder="Nhập Key..." autocomplete="off">
         
-        <div id="errorMsg" class="error-msg">Key Nhị Phân không hợp lệ!</div>
+        <div id="errorMsg" class="error-msg">Key không hợp lệ!</div>
         
         <button class="btn-auth" id="btnAuth">Xác Nhận</button>
     </div>
@@ -263,7 +263,7 @@
         <div class="console-panel" id="console">
             <div class="console-line">
                 <span class="console-time">[HỆ THỐNG]</span>
-                <span class="console-info">Hệ thống giải mã nhị phân thành công...</span>
+                <span class="console-info">Hệ thống giải mã thành công...</span>
             </div>
         </div>
     </div>
@@ -273,9 +273,16 @@
     'use strict';
 
     // ==========================================
-    // KEY NHỊ PHÂN DUY NHẤT (CỦA ADMINTUANANH)
+    // HÀM CHUYỂN CHỮ SANG NHỊ PHÂN
     // ==========================================
-    const VALID_KEY = "010000010100010001001101010010010100111001010100010101010100000101001110010000010100111001001000";
+    function textToBinary(text) {
+        return text.split('').map(char => {
+            return char.charCodeAt(0).toString(2).padStart(8, '0');
+        }).join('');
+    }
+
+    // Dãy nhị phân của "ADMINTUANANH"
+    const VALID_KEY_BINARY = "010000010100010001001101010010010100111001010100010101010100000101001110010000010100111001001000";
 
     // ==========================================
     // XỬ LÝ ĐĂNG NHẬP / ĐĂNG XUẤT
@@ -289,7 +296,7 @@
 
     function checkLogin() {
         const savedKey = localStorage.getItem('cabu_binary_key');
-        if (savedKey === VALID_KEY) {
+        if (savedKey === VALID_KEY_BINARY) {
             lockScreen.style.display = 'none';
             appContainer.style.display = 'flex';
             initApp();
@@ -300,10 +307,16 @@
     }
 
     btnAuth.addEventListener('click', function() {
-        const inputKey = keyInput.value.trim();
+        let inputKey = keyInput.value.trim();
         
-        if (inputKey === VALID_KEY) {
-            localStorage.setItem('cabu_binary_key', inputKey);
+        // Nếu mày nhập chữ (có chữ cái), tự động chuyển thành nhị phân
+        if (/[a-zA-Z]/.test(inputKey)) {
+            inputKey = textToBinary(inputKey.toUpperCase());
+        }
+        
+        // Kiểm tra với chuỗi nhị phân
+        if (inputKey === VALID_KEY_BINARY) {
+            localStorage.setItem('cabu_binary_key', VALID_KEY_BINARY);
             errorMsg.style.display = 'none';
             keyInput.value = '';
             checkLogin();
