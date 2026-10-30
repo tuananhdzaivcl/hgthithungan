@@ -36,9 +36,6 @@
             overflow-x: hidden;
         }
 
-        /* =========================================
-           MÀN HÌNH KHÓA (LOCK SCREEN)
-           ========================================= */
         #lock-screen {
             width: 100%;
             max-width: 400px;
@@ -76,8 +73,8 @@
         .lock-desc { font-size: 13px; color: var(--text-muted); position: relative; z-index: 1; line-height: 1.5; }
         
         .key-input {
-            width: 100%; padding: 12px; background: rgba(0,0,0,0.6); border: 1px solid #444; border-radius: 10px;
-            color: var(--gold); font-family: 'Orbitron', sans-serif; font-size: 12px; text-align: center; letter-spacing: 1px;
+            width: 100%; padding: 15px; background: rgba(0,0,0,0.6); border: 1px solid #444; border-radius: 10px;
+            color: var(--gold); font-family: 'Orbitron', sans-serif; font-size: 14px; text-align: center; letter-spacing: 1px;
             position: relative; z-index: 1; outline: none; transition: 0.3s;
         }
         .key-input:focus { border-color: var(--gold); box-shadow: 0 0 15px rgba(212, 175, 55, 0.3); }
@@ -92,9 +89,6 @@
         .error-msg { color: var(--neon-red); font-size: 13px; font-weight: bold; display: none; position: relative; z-index: 1; animation: shake 0.3s; }
         @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-5px); } 50% { transform: translateX(5px); } 75% { transform: translateX(-5px); } 100% { transform: translateX(0); } }
 
-        /* =========================================
-           GIAO DIỆN CHÍNH CỦA TOOL (ẨN LÚC ĐẦU)
-           ========================================= */
         #app-container {
             display: none;
             width: 100%;
@@ -173,10 +167,9 @@
 </head>
 <body>
 
-    <!-- ================= MÀN HÌNH ĐĂNG NHẬP KEY ================= -->
     <div id="lock-screen">
         <div class="lock-icon">🔒</div>
-        <div class="lock-title">BINARY ACCESS</div>
+        <div class="lock-title">VIP ACCESS</div>
         <div class="lock-desc">Vui lòng nhập Key bản quyền để sử dụng Tool.</div>
         
         <input type="text" id="keyInput" class="key-input" placeholder="Nhập Key..." autocomplete="off">
@@ -186,7 +179,6 @@
         <button class="btn-auth" id="btnAuth">Xác Nhận</button>
     </div>
 
-    <!-- ================= GIAO DIỆN TOOL CHÍNH ================= -->
     <div id="app-container">
         <div class="header">
             <div class="logo"><span>🎲</span> AI TAI XIU VIP</div>
@@ -272,21 +264,15 @@
 (function() {
     'use strict';
 
-    // ==========================================
-    // HÀM CHUYỂN CHỮ SANG NHỊ PHÂN
-    // ==========================================
     function textToBinary(text) {
         return text.split('').map(char => {
             return char.charCodeAt(0).toString(2).padStart(8, '0');
         }).join('');
     }
 
-    // Dãy nhị phân của "ADMINTUANANH"
+    // Dãy nhị phân của ADMINTUANANH
     const VALID_KEY_BINARY = "010000010100010001001101010010010100111001010100010101010100000101001110010000010100111001001000";
 
-    // ==========================================
-    // XỬ LÝ ĐĂNG NHẬP / ĐĂNG XUẤT
-    // ==========================================
     const lockScreen = document.getElementById('lock-screen');
     const appContainer = document.getElementById('app-container');
     const keyInput = document.getElementById('keyInput');
@@ -307,26 +293,44 @@
     }
 
     btnAuth.addEventListener('click', function() {
-        let inputKey = keyInput.value.trim();
+        // Loại bỏ toàn bộ khoảng trắng, dấu cách, xuống dòng
+        let inputKey = keyInput.value.replace(/\s+/g, '');
         
-        // Nếu mày nhập chữ (có chữ cái), tự động chuyển thành nhị phân
-        if (/[a-zA-Z]/.test(inputKey)) {
-            inputKey = textToBinary(inputKey.toUpperCase());
-        }
-        
-        // Kiểm tra với chuỗi nhị phân
-        if (inputKey === VALID_KEY_BINARY) {
-            localStorage.setItem('cabu_binary_key', VALID_KEY_BINARY);
-            errorMsg.style.display = 'none';
-            keyInput.value = '';
-            checkLogin();
-        } else {
-            errorMsg.style.display = 'block';
-            errorMsg.style.animation = 'none';
-            errorMsg.offsetHeight; 
-            errorMsg.style.animation = 'shake 0.3s';
+        if (inputKey === "") return;
+
+        // Nếu là chuỗi nhị phân (toàn số 0 và 1)
+        if (/^[01]+$/.test(inputKey)) {
+            if (inputKey === VALID_KEY_BINARY) {
+                localStorage.setItem('cabu_binary_key', VALID_KEY_BINARY);
+                errorMsg.style.display = 'none';
+                keyInput.value = '';
+                checkLogin();
+            } else {
+                showError();
+            }
+        } 
+        // Nếu là chuỗi chữ cái (ADMINTUANANH)
+        else {
+            let upperText = inputKey.toUpperCase(); // Tự động viết hoa
+            let binaryFromText = textToBinary(upperText);
+            
+            if (binaryFromText === VALID_KEY_BINARY) {
+                localStorage.setItem('cabu_binary_key', VALID_KEY_BINARY);
+                errorMsg.style.display = 'none';
+                keyInput.value = '';
+                checkLogin();
+            } else {
+                showError();
+            }
         }
     });
+
+    function showError() {
+        errorMsg.style.display = 'block';
+        errorMsg.style.animation = 'none';
+        errorMsg.offsetHeight; 
+        errorMsg.style.animation = 'shake 0.3s';
+    }
 
     keyInput.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') btnAuth.click();
@@ -339,9 +343,6 @@
         }
     });
 
-    // ==========================================
-    // KHỞI TẠO TOOL (Chỉ chạy khi đã có Key)
-    // ==========================================
     let isAppInit = false;
 
     function initApp() {
@@ -396,7 +397,6 @@
             return gameHistory[gameHistory.length - index];
         }
 
-        // ================= CÁC THUẬT TOÁN AI =================
         function algoStreak() {
             if (gameHistory.length < 3) return null;
             let last = getVal(1);
@@ -643,7 +643,6 @@
             analyze();
         }
 
-        // Sự kiện bấm nút Tài / Xỉu
         document.getElementById('btnTai').addEventListener('click', function() { addResult('T'); });
         document.getElementById('btnXiu').addEventListener('click', function() { addResult('X'); });
         
@@ -684,14 +683,12 @@
             }
         });
 
-        // Khởi tạo hiển thị ban đầu
         renderHistory();
         updateStats();
         analyze();
         log("SYSTEM", "Hệ thống AI đã sẵn sàng. Nhập điểm để bắt đầu!", "success");
     }
 
-    // Chạy check login ngay khi tải trang
     checkLogin();
 
 })();
