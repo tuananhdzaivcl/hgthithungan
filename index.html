@@ -54,7 +54,7 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 15px;
             animation: slideUp 0.5s ease-out;
         }
 
@@ -69,25 +69,31 @@
         @keyframes slideUp { 0% { transform: translateY(30px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
         @keyframes rotate { 100% { transform: rotate(360deg); } }
 
-        .lock-icon { font-size: 50px; margin-bottom: 10px; animation: float 3s ease-in-out infinite; position: relative; z-index: 1; }
+        .lock-icon { font-size: 50px; margin-bottom: 5px; animation: float 3s ease-in-out infinite; position: relative; z-index: 1; }
         @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
         
         .lock-title { font-family: 'Orbitron', sans-serif; font-size: 24px; font-weight: 900; color: var(--gold); text-shadow: 0 0 15px var(--gold-glow); position: relative; z-index: 1; }
-        .lock-desc { font-size: 13px; color: var(--text-muted); position: relative; z-index: 1; margin-bottom: 10px; }
+        .lock-desc { font-size: 13px; color: var(--text-muted); position: relative; z-index: 1; line-height: 1.5; }
         
         .key-input {
-            width: 100%; padding: 15px; background: rgba(0,0,0,0.6); border: 1px solid #444; border-radius: 10px;
-            color: var(--gold); font-family: 'Orbitron', sans-serif; font-size: 20px; text-align: center; letter-spacing: 5px;
-            position: relative; z-index: 1; outline: none; transition: 0.3s;
+            width: 100%; padding: 12px; background: rgba(0,0,0,0.6); border: 1px solid #444; border-radius: 10px;
+            color: var(--gold); font-family: 'Orbitron', sans-serif; font-size: 13px; text-align: center; letter-spacing: 1px;
+            position: relative; z-index: 1; outline: none; transition: 0.3s; word-wrap: break-word;
         }
         .key-input:focus { border-color: var(--gold); box-shadow: 0 0 15px rgba(212, 175, 55, 0.3); }
 
         .btn-auth {
             width: 100%; padding: 15px; background: linear-gradient(135deg, #b8860b, var(--gold)); border: none; border-radius: 10px;
-            color: #000; font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 16px; cursor: pointer; text-transform: uppercase;
+            color: #000; font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 15px; cursor: pointer; text-transform: uppercase;
             position: relative; z-index: 1; transition: 0.2s; box-shadow: 0 5px 15px var(--gold-glow);
         }
         .btn-auth:active { transform: scale(0.96); }
+
+        .btn-auto-key {
+            background: transparent; border: 1px dashed #666; color: #aaa; padding: 8px; border-radius: 6px;
+            font-size: 11px; cursor: pointer; position: relative; z-index: 1; transition: 0.2s;
+        }
+        .btn-auto-key:hover { color: var(--gold); border-color: var(--gold); }
         
         .error-msg { color: var(--neon-red); font-size: 13px; font-weight: bold; display: none; position: relative; z-index: 1; animation: shake 0.3s; }
         @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-5px); } 50% { transform: translateX(5px); } 75% { transform: translateX(-5px); } 100% { transform: translateX(0); } }
@@ -96,7 +102,7 @@
            GIAO DIỆN CHÍNH CỦA TOOL (ẨN LÚC ĐẦU)
            ========================================= */
         #app-container {
-            display: none; /* Sẽ bật bằng JS nếu đúng Key */
+            display: none;
             width: 100%;
             max-width: 1100px;
             background: var(--panel-bg);
@@ -178,11 +184,12 @@
     <div id="lock-screen">
         <div class="lock-icon">🔒</div>
         <div class="lock-title">BINARY ACCESS</div>
-        <div class="lock-desc">Nhập mã Key Nhị Phân để mở khóa Tool</div>
+        <div class="lock-desc">Hệ thống yêu cầu mã Nhị Phân.<br>(Có thể nhập chữ <b>ADMINTUANANH</b>)</div>
         
-        <input type="text" id="keyInput" class="key-input" placeholder="VD: 101010" autocomplete="off">
+        <input type="text" id="keyInput" class="key-input" placeholder="Nhập mã nhị phân..." autocomplete="off">
         
-        <div id="errorMsg" class="error-msg">Mã Nhị Phân không hợp lệ!</div>
+        <button class="btn-auto-key" id="btnAutoKey">⚡ Tự Động Điền Key Nhị Phân</button>
+        <div id="errorMsg" class="error-msg">Mã Key không hợp lệ!</div>
         
         <button class="btn-auth" id="btnAuth">Giải Mã</button>
     </div>
@@ -274,12 +281,21 @@
     'use strict';
 
     // ==========================================
-    // CẤU HÌNH DANH SÁCH KEY NHỊ PHÂN (MÀY SỬA Ở ĐÂY)
+    // CẤU HÌNH KEY GỐC VÀ HÀM CHUYỂN ĐỔI NHỊ PHÂN
     // ==========================================
+    const SECRET_KEY_TEXT = "ADMINTUANANH"; 
+
+    // Hàm chuyển chuỗi thành nhị phân (8-bit ASCII)
+    function textToBinary(text) {
+        return text.split('').map(char => {
+            return char.charCodeAt(0).toString(2).padStart(8, '0');
+        }).join('');
+    }
+
+    // Tạo danh sách Key hợp lệ (bao gồm cả dạng chữ và dạng nhị phân)
     const VALID_KEYS = [
-        "101010", // Key 1
-        "110100", // Key 2
-        "111111"  // Key 3
+        SECRET_KEY_TEXT,               // Cho phép nhập chữ
+        textToBinary(SECRET_KEY_TEXT)  // Cho phép nhập nhị phân
     ];
 
     // ==========================================
@@ -289,10 +305,12 @@
     const appContainer = document.getElementById('app-container');
     const keyInput = document.getElementById('keyInput');
     const btnAuth = document.getElementById('btnAuth');
+    const btnAutoKey = document.getElementById('btnAutoKey');
     const errorMsg = document.getElementById('errorMsg');
     const btnLogout = document.getElementById('btnLogout');
 
     function checkLogin() {
+        // Lưu key dạng nhị phân vào localStorage để check
         const savedKey = localStorage.getItem('cabu_binary_key');
         if (savedKey && VALID_KEYS.includes(savedKey)) {
             lockScreen.style.display = 'none';
@@ -303,6 +321,11 @@
             appContainer.style.display = 'none';
         }
     }
+
+    // Nút Tự động điền Key Nhị Phân
+    btnAutoKey.addEventListener('click', function() {
+        keyInput.value = textToBinary(SECRET_KEY_TEXT);
+    });
 
     btnAuth.addEventListener('click', function() {
         const key = keyInput.value.trim();
@@ -339,7 +362,7 @@
         if (isAppInit) return;
         isAppInit = true;
 
-        let gameHistory = []; // Mảng lưu 'T' hoặc 'X'
+        let gameHistory = []; 
         let autoInterval = null;
         const MAX_HISTORY = 50;
 
