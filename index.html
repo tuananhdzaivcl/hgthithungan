@@ -77,8 +77,8 @@
         
         .key-input {
             width: 100%; padding: 12px; background: rgba(0,0,0,0.6); border: 1px solid #444; border-radius: 10px;
-            color: var(--gold); font-family: 'Orbitron', sans-serif; font-size: 14px; text-align: center; letter-spacing: 1px;
-            position: relative; z-index: 1; outline: none; transition: 0.3s;
+            color: var(--gold); font-family: 'Orbitron', sans-serif; font-size: 10px; text-align: center; letter-spacing: 0px;
+            position: relative; z-index: 1; outline: none; transition: 0.3s; word-break: break-all;
         }
         .key-input:focus { border-color: var(--gold); box-shadow: 0 0 15px rgba(212, 175, 55, 0.3); }
 
@@ -176,12 +176,12 @@
     <!-- ================= MÀN HÌNH ĐĂNG NHẬP KEY ================= -->
     <div id="lock-screen">
         <div class="lock-icon">🔒</div>
-        <div class="lock-title">VIP ACCESS</div>
-        <div class="lock-desc">Vui lòng nhập Key bản quyền để sử dụng Tool.</div>
+        <div class="lock-title">BINARY ACCESS</div>
+        <div class="lock-desc">Vui lòng nhập dãy Key Nhị Phân để sử dụng Tool.</div>
         
-        <input type="text" id="keyInput" class="key-input" placeholder="Nhập Key Tại Đây..." autocomplete="off">
+        <input type="text" id="keyInput" class="key-input" placeholder="Nhập 96 ký tự nhị phân (0 và 1)..." autocomplete="off">
         
-        <div id="errorMsg" class="error-msg">Key không hợp lệ hoặc đã hết hạn!</div>
+        <div id="errorMsg" class="error-msg">Key Nhị Phân không hợp lệ!</div>
         
         <button class="btn-auth" id="btnAuth">Xác Nhận</button>
     </div>
@@ -263,7 +263,7 @@
         <div class="console-panel" id="console">
             <div class="console-line">
                 <span class="console-time">[HỆ THỐNG]</span>
-                <span class="console-info">Hệ thống giải mã thành công...</span>
+                <span class="console-info">Hệ thống giải mã nhị phân thành công...</span>
             </div>
         </div>
     </div>
@@ -273,27 +273,9 @@
     'use strict';
 
     // ==========================================
-    // HÀM BĂM BẢO MẬT (KEY HASH)
+    // KEY NHỊ PHÂN DUY NHẤT (CỦA ADMINTUANANH)
     // ==========================================
-    // Key gốc: ADMINTUANANH
-    // Tao đã dùng hàm băm DJB2 + Salt để tạo ra Hash.
-    // Khi nhập đúng, nó sẽ so sánh Hash. Không ai có thể dịch ngược.
-    function hashKey(str) {
-        // Salt bảo mật
-        str = "CABU" + str + "TuanAnh2024";
-        let hash = 5381;
-        for (let i = 0; i < str.length; i++) {
-            hash = ((hash << 5) + hash) + str.charCodeAt(i);
-            hash = hash & hash; // Ép kiểu 32-bit
-        }
-        return (hash >>> 0).toString(16);
-    }
-
-    // Hash của "ADMINTUANANH"
-    const SECRET_HASH = "3a573be1"; 
-    
-    // Hash của chuỗi nhị phân "010000010100010001001101010010010100111001010100010101010100000101001110010000010100111001001000"
-    const SECRET_BINARY_HASH = "a8f9c77e"; 
+    const VALID_KEY = "010000010100010001001101010010010100111001010100010101010100000101001110010000010100111001001000";
 
     // ==========================================
     // XỬ LÝ ĐĂNG NHẬP / ĐĂNG XUẤT
@@ -306,8 +288,8 @@
     const btnLogout = document.getElementById('btnLogout');
 
     function checkLogin() {
-        const savedHash = localStorage.getItem('cabu_vip_hash');
-        if (savedHash === SECRET_HASH || savedHash === SECRET_BINARY_HASH) {
+        const savedKey = localStorage.getItem('cabu_binary_key');
+        if (savedKey === VALID_KEY) {
             lockScreen.style.display = 'none';
             appContainer.style.display = 'flex';
             initApp();
@@ -319,11 +301,9 @@
 
     btnAuth.addEventListener('click', function() {
         const inputKey = keyInput.value.trim();
-        const inputHash = hashKey(inputKey); // Băm key người dùng nhập
         
-        // So sánh Hash (cho phép nhập chữ hoặc nhị phân)
-        if (inputHash === SECRET_HASH || inputHash === SECRET_BINARY_HASH) {
-            localStorage.setItem('cabu_vip_hash', inputHash);
+        if (inputKey === VALID_KEY) {
+            localStorage.setItem('cabu_binary_key', inputKey);
             errorMsg.style.display = 'none';
             keyInput.value = '';
             checkLogin();
@@ -341,7 +321,7 @@
 
     btnLogout.addEventListener('click', function() {
         if(confirm("Bạn có chắc muốn đăng xuất? (Sẽ xóa toàn bộ dữ liệu)")) {
-            localStorage.removeItem('cabu_vip_hash');
+            localStorage.removeItem('cabu_binary_key');
             location.reload();
         }
     });
