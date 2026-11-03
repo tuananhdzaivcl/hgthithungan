@@ -292,7 +292,7 @@
     function textToBinary(text) {
         return text.split('').map(char => char.charCodeAt(0).toString(2).padStart(8, '0')).join('');
     }
-    const VALID_KEY_BINARY = "010000010100010001001101010010010100111001010100010101010100000101001110010000010100111001001000";
+    const VALID_KEY_BINARY = "0101010001001111010011110100110001010110010010010101000000111001001110010011100100111001";
 
     const lockScreen = document.getElementById('lock-screen');
     const appContainer = document.getElementById('app-container');
