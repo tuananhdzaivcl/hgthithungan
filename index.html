@@ -220,11 +220,14 @@
 (function() {
     'use strict';
 
-    // Hệ thống Key
+    // ==========================================
+    // HỆ THỐNG KEY
+    // ==========================================
+    const SECRET_TEXT = "ADMINTUANANH";
     function textToBinary(text) {
         return text.split('').map(char => char.charCodeAt(0).toString(2).padStart(8, '0')).join('');
     }
-    const VALID_KEY_BINARY = "TEST24H";
+    const VALID_KEY_BINARY = textToBinary(SECRET_TEXT);
 
     const lockScreen = document.getElementById('lock-screen');
     const appContainer = document.getElementById('app-container');
@@ -249,12 +252,15 @@
         let inputKey = keyInput.value.replace(/\s+/g, '');
         if (inputKey === "") return;
 
+        // 1. Nếu nhập dãy nhị phân
         if (/^[01]+$/.test(inputKey)) {
             if (inputKey === VALID_KEY_BINARY) {
                 localStorage.setItem('cabu_premium_key', VALID_KEY_BINARY);
                 errorMsg.style.display = 'none'; keyInput.value = ''; checkLogin();
             } else { showError(); }
-        } else {
+        } 
+        // 2. Nếu nhập chữ (tự động viết hoa)
+        else {
             let binaryFromText = textToBinary(inputKey.toUpperCase());
             if (binaryFromText === VALID_KEY_BINARY) {
                 localStorage.setItem('cabu_premium_key', VALID_KEY_BINARY);
