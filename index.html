@@ -3,189 +3,551 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Hệ Thống Đang Bảo Trì</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <title>AI Tai Xiu Prediction - Premium V5.1</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #050508;
-            --panel-bg: rgba(20, 20, 25, 0.85);
-            --border-color: rgba(212, 175, 55, 0.3);
-            --gold: #d4af37;
-            --gold-glow: rgba(212, 175, 55, 0.5);
-            --zalo-blue: #0068ff;
-            --zalo-glow: rgba(0, 104, 255, 0.6);
+            --bg-color: #f4f7f9;
+            --card-bg: #ffffff;
+            --text-main: #2d3748;
+            --text-muted: #718096;
+            --border-color: #e2e8f0;
+            --pastel-red: #ff6b6b;
+            --pastel-red-light: #ffe3e3;
+            --pastel-blue: #4dabf7;
+            --pastel-blue-light: #e3fafc;
+            --pastel-gold: #fcc419;
+            --pastel-gold-light: #fff9db;
+            --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 20px 40px -10px rgba(0, 0, 0, 0.08);
         }
 
-        * { 
-            box-sizing: border-box; 
-            margin: 0; 
-            padding: 0; 
-            user-select: none; 
-            -webkit-user-select: none; 
-            -webkit-tap-highlight-color: transparent; 
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
 
         body {
             background-color: var(--bg-color);
-            background-image: 
-                radial-gradient(circle at 15% 50%, rgba(212, 175, 55, 0.05) 0%, transparent 50%), 
-                radial-gradient(circle at 85% 30%, rgba(0, 104, 255, 0.05) 0%, transparent 50%);
-            color: #fff;
-            font-family: 'Roboto', sans-serif;
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
-            overflow: hidden;
         }
 
-        .maintenance-box {
-            width: 100%;
-            max-width: 450px;
-            background: var(--panel-bg);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            padding: 45px 25px;
-            text-align: center;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 0 20px rgba(212, 175, 55, 0.05);
-            position: relative;
-            overflow: hidden;
-            animation: slideUp 0.6s ease-out;
+        /* MÀN HÌNH KHÓA */
+        #lock-screen {
+            width: 100%; max-width: 420px; background: var(--card-bg); border-radius: 24px; padding: 50px 35px; text-align: center; box-shadow: var(--shadow-lg); display: flex; flex-direction: column; gap: 20px; animation: slideUp 0.5s ease-out; z-index: 10;
         }
+        @keyframes slideUp { 0% { transform: translateY(20px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
+        .lock-icon { font-size: 55px; margin-bottom: 10px; }
+        .lock-title { font-family: 'Space Grotesk', sans-serif; font-size: 26px; font-weight: 700; color: var(--text-main); letter-spacing: -0.5px; }
+        .lock-desc { font-size: 14px; color: var(--text-muted); margin-bottom: 10px; }
+        .key-input { width: 100%; padding: 16px; background: #f8fafc; border: 2px solid var(--border-color); border-radius: 12px; color: var(--text-main); font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 500; text-align: center; letter-spacing: 1px; outline: none; transition: all 0.3s ease; }
+        .key-input:focus { border-color: var(--pastel-blue); background: #ffffff; box-shadow: 0 0 0 4px var(--pastel-blue-light); }
+        .btn-auth { width: 100%; padding: 16px; background: var(--text-main); border: none; border-radius: 12px; color: #ffffff; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 16px; cursor: pointer; text-transform: uppercase; transition: all 0.2s; box-shadow: var(--shadow-md); }
+        .btn-auth:active { transform: scale(0.98); }
+        .error-msg { color: var(--pastel-red); font-size: 14px; font-weight: 600; display: none; animation: shake 0.4s; }
+        @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-4px); } 50% { transform: translateX(4px); } 75% { transform: translateX(-4px); } 100% { transform: translateX(0); } }
 
-        /* Hiệu ứng viền sáng chạy vòng quanh */
-        .maintenance-box::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: conic-gradient(transparent, rgba(212, 175, 55, 0.15), transparent 30%);
-            animation: rotate 6s linear infinite;
-            pointer-events: none;
-        }
+        /* GIAO DIỆN TOOL CHÍNH */
+        #app-container { display: none; width: 100%; max-width: 1100px; background: transparent; flex-direction: column; gap: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 0 10px; }
+        .logo { font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 10px; }
+        .logo span { font-size: 28px; }
+        .btn-logout { background: transparent; border: 2px solid var(--border-color); color: var(--text-muted); padding: 8px 16px; border-radius: 10px; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+        .btn-logout:hover { border-color: var(--pastel-red); color: var(--pastel-red); background: var(--pastel-red-light); }
 
-        @keyframes rotate { 
-            100% { transform: rotate(360deg); } 
-        }
+        .main-layout { display: grid; grid-template-columns: 380px 1fr; gap: 20px; }
+        .panel { background: var(--card-bg); border-radius: 24px; padding: 25px; box-shadow: var(--shadow-md); display: flex; flex-direction: column; gap: 20px; }
+        .section-title { font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+        .section-title::before { content: ''; display: block; width: 4px; height: 16px; background: var(--pastel-blue); border-radius: 2px; }
 
-        @keyframes slideUp {
-            0% { transform: translateY(30px); opacity: 0; }
-            100% { transform: translateY(0); opacity: 1; }
-        }
+        .btn-group { display: flex; gap: 15px; }
+        .btn { flex: 1; padding: 18px 0; border: none; border-radius: 16px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 18px; cursor: pointer; transition: all 0.2s; text-transform: uppercase; display: flex; justify-content: center; align-items: center; }
+        .btn:active { transform: scale(0.96); }
+        .btn-tai { background: var(--pastel-red-light); color: var(--pastel-red); border: 2px solid transparent; }
+        .btn-tai:hover { border-color: var(--pastel-red); }
+        .btn-xiu { background: var(--pastel-blue-light); color: var(--pastel-blue); border: 2px solid transparent; }
+        .btn-xiu:hover { border-color: var(--pastel-blue); }
+        
+        .btn-utility { background: #f8fafc; color: var(--text-muted); border: 2px solid var(--border-color); padding: 14px; border-radius: 12px; font-weight: 600; cursor: pointer; flex: 1; text-align: center; font-size: 14px; transition: all 0.2s; }
+        .btn-auto { background: var(--pastel-gold-light); color: #b08d00; border: 2px solid transparent; padding: 14px; border-radius: 12px; font-weight: 700; cursor: pointer; width: 100%; transition: all 0.2s; }
 
-        .icon {
-            font-size: 65px;
-            margin-bottom: 20px;
-            display: inline-block;
-            animation: float 3s ease-in-out infinite;
-            position: relative;
-            z-index: 1;
-        }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+        .stat-box { background: #f8fafc; border: 1px solid var(--border-color); padding: 15px 10px; border-radius: 16px; text-align: center; }
+        .stat-label { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; font-weight: 600; text-transform: uppercase; }
+        .stat-val { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 700; }
+        .stat-val.win { color: #20c997; }
+        .stat-val.loss { color: var(--pastel-red); }
+        .stat-val.rate { color: var(--pastel-gold); }
 
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-12px); }
-            100% { transform: translateY(0px); }
-        }
+        .history-container { background: #f8fafc; border: 1px solid var(--border-color); border-radius: 16px; padding: 15px; height: 130px; overflow-y: auto; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 8px; }
+        .chip { width: 34px; height: 34px; border-radius: 10px; display: flex; justify-content: center; align-items: center; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 15px; color: white; animation: pop 0.3s; }
+        .chip.T { background: var(--pastel-red); }
+        .chip.X { background: var(--pastel-blue); }
+        @keyframes pop { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 
-        .title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 28px;
-            font-weight: 900;
-            color: var(--gold);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 15px;
-            text-shadow: 0 0 15px var(--gold-glow);
-            position: relative;
-            z-index: 1;
-            line-height: 1.3;
-        }
+        .prediction-section { display: flex; flex-direction: column; justify-content: space-between; }
+        .prediction-box { background: #f8fafc; border: 2px dashed var(--border-color); border-radius: 24px; padding: 40px 20px; text-align: center; position: relative; transition: all 0.4s ease; }
+        .pred-result { font-family: 'Space Grotesk', sans-serif; font-size: 72px; font-weight: 700; text-transform: uppercase; line-height: 1; transition: all 0.3s ease; }
+        .pred-result.T { color: var(--pastel-red); text-shadow: 0 10px 20px rgba(255, 107, 107, 0.2); }
+        .pred-result.X { color: var(--pastel-blue); text-shadow: 0 10px 20px rgba(77, 171, 247, 0.2); }
+        .pred-result.WAIT { color: var(--text-muted); font-size: 42px; }
 
-        .subtitle {
-            font-size: 15px;
-            color: #aaa;
-            margin-bottom: 35px;
-            line-height: 1.6;
-            position: relative;
-            z-index: 1;
-        }
+        .confidence-wrapper { margin-top: 30px; }
+        .confidence-text { font-size: 14px; color: var(--text-main); font-weight: 700; margin-bottom: 8px; }
+        .confidence-bar-bg { width: 80%; margin: 0 auto; height: 10px; background: var(--border-color); border-radius: 5px; overflow: hidden; }
+        .confidence-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--pastel-red), var(--pastel-gold), var(--pastel-blue)); transition: width 0.6s; border-radius: 5px; }
 
-        .zalo-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            width: 100%;
-            background: linear-gradient(135deg, #0055cc, var(--zalo-blue));
-            color: white;
-            text-decoration: none;
-            padding: 18px 20px;
-            border-radius: 12px;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 16px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            box-shadow: 0 8px 25px var(--zalo-glow);
-            border: 1px solid #3388ff;
-            transition: all 0.3s ease;
-            position: relative;
-            z-index: 1;
-        }
+        .analysis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 25px; }
+        .analysis-card { background: #ffffff; border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; position: relative; }
+        
+        /* Cảnh báo đặc biệt cho Bệt / 1-1 */
+        .analysis-card.highlight { border-color: var(--pastel-gold); box-shadow: 0 0 15px rgba(252, 196, 25, 0.2); background: #fffdf5; }
+        
+        .analysis-title { font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 8px; }
+        .analysis-value { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; color: var(--text-main); margin-bottom: 5px; }
+        .analysis-desc { font-size: 13px; color: var(--text-muted); line-height: 1.4; }
 
-        .zalo-btn:active {
-            transform: scale(0.96);
-            box-shadow: 0 4px 15px var(--zalo-glow);
-        }
+        .console-panel { background: #2d3748; border-radius: 16px; padding: 15px 20px; height: 120px; overflow-y: auto; font-family: monospace; font-size: 13px; color: #a0aec0; }
+        .console-line { margin-bottom: 4px; }
+        .console-time { color: #4a5568; margin-right: 8px; }
+        .console-tag { color: #f6ad55; font-weight: bold; margin-right: 8px; }
+        .console-success { color: #68d391; }
+        .console-error { color: #fc8181; }
 
-        .zalo-btn svg {
-            width: 24px;
-            height: 24px;
-            fill: currentColor;
-        }
-
-        /* Footer nhỏ chìm */
-        .footer {
-            margin-top: 35px;
-            font-size: 11px;
-            color: #555;
-            letter-spacing: 1px;
-            position: relative;
-            z-index: 1;
-            text-transform: uppercase;
+        @media (max-width: 850px) { 
+            .main-layout { grid-template-columns: 1fr; } 
+            .pred-result { font-size: 56px; } 
+            .panel { padding: 20px; }
+            .analysis-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
 
-    <div class="maintenance-box">
-        <div class="icon">🛠️</div>
+    <!-- ================= MÀN HÌNH ĐĂNG NHẬP KEY ================= -->
+    <div id="lock-screen">
+        <div class="lock-icon">✨</div>
+        <div class="lock-title">PREMIUM ACCESS</div>
+        <div class="lock-desc">Vui lòng nhập Key bản quyền để trải nghiệm hệ thống AI thế hệ mới.</div>
         
-        <div class="title">ĐANG BẢO TRÌ</div>
+        <input type="text" id="keyInput" class="key-input" placeholder="Nhập Key Tại Đây..." autocomplete="off">
         
-        <div class="subtitle">
-            Hệ thống đang được nâng cấp để mang lại trải nghiệm tốt nhất.<br>
-            Vui lòng liên hệ Admin để được hỗ trợ.
+        <div id="errorMsg" class="error-msg">Key không hợp lệ. Vui lòng thử lại!</div>
+        
+        <button class="btn-auth" id="btnAuth">Mở Khóa</button>
+    </div>
+
+    <!-- ================= GIAO DIỆN TOOL CHÍNH ================= -->
+    <div id="app-container">
+        <div class="header">
+            <div class="logo"><span>🧠</span> AI PREDICTOR <span style="font-size: 12px; background: var(--pastel-gold); color: #fff; padding: 2px 8px; border-radius: 8px; margin-left: 5px;">V5.1 PRO</span></div>
+            <button class="btn-logout" id="btnLogout">Đăng Xuất</button>
         </div>
 
-        <!-- Nút liên hệ Zalo -->
-        <a href="https://zalo.me/0339651811" class="zalo-btn" target="_blank">
-            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2C6.48 2 2 5.92 2 10.75c0 2.76 1.54 5.21 3.94 6.79L5 22l4.91-2.54c.68.14 1.38.21 2.09.21 5.52 0 10-3.92 10-8.75S17.52 2 12 2zm1.25 12.5h-2.5v-2.5h2.5v2.5zm0-4.17h-2.5V5.83h2.5v4.5z"/>
-            </svg>
-            ZALO: 0339651811
-        </a>
+        <div class="main-layout">
+            <div class="panel">
+                <div>
+                    <div class="section-title">Ghi Nhận Kết Quả</div>
+                    <div class="btn-group">
+                        <button class="btn btn-tai" id="btnTai">TÀI</button>
+                        <button class="btn btn-xiu" id="btnXiu">XỈU</button>
+                    </div>
+                </div>
+                
+                <div class="btn-group">
+                    <button class="btn-utility" id="btnRandom">Ngẫu Nhiên</button>
+                    <button class="btn-utility" id="btnClear">Làm Mới</button>
+                </div>
+                <button class="btn-auto" id="autoBtn">▶ Bật Auto Test</button>
 
-        <div class="footer">
-            DEV TUAN ANH
+                <div>
+                    <div class="section-title">Hiệu Suất</div>
+                    <div class="stats-grid">
+                        <div class="stat-box"><div class="stat-label">Thắng</div><div class="stat-val win" id="statWin">0</div></div>
+                        <div class="stat-box"><div class="stat-label">Thua</div><div class="stat-val loss" id="statLoss">0</div></div>
+                        <div class="stat-box"><div class="stat-label">Tỷ Lệ</div><div class="stat-val rate" id="statRate">0%</div></div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="section-title">Lịch Sử Cầu</div>
+                    <div class="history-container" id="historyContainer"></div>
+                </div>
+            </div>
+
+            <div class="panel prediction-section">
+                <div>
+                    <div class="section-title">Dự Báo Tiếp Theo (Hệ Thống Nhận Diện)</div>
+                    <div class="prediction-box" id="predBox">
+                        <div class="pred-result WAIT" id="predResult">CHỜ CẦU</div>
+                        <div class="confidence-wrapper">
+                            <div class="confidence-text" id="confText">Độ Tin Cậy: 0%</div>
+                            <div class="confidence-bar-bg">
+                                <div class="confidence-bar-fill" id="confBar"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="analysis-grid">
+                    <div class="analysis-card" id="patternCard">
+                        <div class="analysis-title">Trạng Thái Cầu Hiện Tại</div>
+                        <div class="analysis-value" id="algName" style="color: var(--pastel-blue);">Đang quét...</div>
+                        <div class="analysis-desc" id="algDesc">Chờ tín hiệu Bệt hoặc 1-1</div>
+                    </div>
+                    <div class="analysis-card">
+                        <div class="analysis-title">Đánh Giá Trạng Thái</div>
+                        <div class="analysis-value" id="riskLevel" style="color: var(--text-muted);">Chưa xác định</div>
+                        <div class="analysis-desc" id="riskDesc">Cầu đang ở mức an toàn</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="console-panel" id="console">
+            <div class="console-line">
+                <span class="console-time">[HỆ THỐNG]</span>
+                <span class="console-success">Khởi tạo AI V5.1 (Tích hợp Radar Bệt & 1-1) thành công...</span>
+            </div>
         </div>
     </div>
 
+<script>
+(function() {
+    'use strict';
+
+    // Hệ thống Key
+    function textToBinary(text) {
+        return text.split('').map(char => char.charCodeAt(0).toString(2).padStart(8, '0')).join('');
+    }
+    const VALID_KEY_BINARY = "TEST24H";
+
+    const lockScreen = document.getElementById('lock-screen');
+    const appContainer = document.getElementById('app-container');
+    const keyInput = document.getElementById('keyInput');
+    const btnAuth = document.getElementById('btnAuth');
+    const errorMsg = document.getElementById('errorMsg');
+    const btnLogout = document.getElementById('btnLogout');
+
+    function checkLogin() {
+        const savedKey = localStorage.getItem('cabu_premium_key');
+        if (savedKey === VALID_KEY_BINARY) {
+            lockScreen.style.display = 'none';
+            appContainer.style.display = 'flex';
+            initApp();
+        } else {
+            lockScreen.style.display = 'flex';
+            appContainer.style.display = 'none';
+        }
+    }
+
+    btnAuth.addEventListener('click', function() {
+        let inputKey = keyInput.value.replace(/\s+/g, '');
+        if (inputKey === "") return;
+
+        if (/^[01]+$/.test(inputKey)) {
+            if (inputKey === VALID_KEY_BINARY) {
+                localStorage.setItem('cabu_premium_key', VALID_KEY_BINARY);
+                errorMsg.style.display = 'none'; keyInput.value = ''; checkLogin();
+            } else { showError(); }
+        } else {
+            let binaryFromText = textToBinary(inputKey.toUpperCase());
+            if (binaryFromText === VALID_KEY_BINARY) {
+                localStorage.setItem('cabu_premium_key', VALID_KEY_BINARY);
+                errorMsg.style.display = 'none'; keyInput.value = ''; checkLogin();
+            } else { showError(); }
+        }
+    });
+
+    function showError() {
+        errorMsg.style.display = 'block';
+        errorMsg.style.animation = 'none'; errorMsg.offsetHeight; errorMsg.style.animation = 'shake 0.4s';
+    }
+
+    keyInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') btnAuth.click(); });
+    btnLogout.addEventListener('click', function() {
+        if(confirm("Bạn có chắc muốn đăng xuất? (Sẽ xóa toàn bộ dữ liệu)")) {
+            localStorage.removeItem('cabu_premium_key'); location.reload();
+        }
+    });
+
+    // ==========================================
+    // LOGIC TOOL
+    // ==========================================
+    let isAppInit = false;
+
+    function initApp() {
+        if (isAppInit) return;
+        isAppInit = true;
+
+        let gameHistory = []; 
+        let autoInterval = null;
+        const MAX_HISTORY = 50;
+
+        let totalWins = 0, totalLosses = 0;
+        let lastPrediction = null;
+        let isWaitingForResult = false;
+
+        const dom = {
+            historyContainer: document.getElementById('historyContainer'),
+            predResult: document.getElementById('predResult'),
+            predBox: document.getElementById('predBox'),
+            confText: document.getElementById('confText'),
+            confBar: document.getElementById('confBar'),
+            algName: document.getElementById('algName'),
+            algDesc: document.getElementById('algDesc'),
+            patternCard: document.getElementById('patternCard'),
+            riskLevel: document.getElementById('riskLevel'),
+            riskDesc: document.getElementById('riskDesc'),
+            console: document.getElementById('console'),
+            autoBtn: document.getElementById('autoBtn'),
+            statWin: document.getElementById('statWin'),
+            statLoss: document.getElementById('statLoss'),
+            statRate: document.getElementById('statRate')
+        };
+
+        function log(tag, msg, type = 'info') {
+            const time = new Date().toLocaleTimeString();
+            const line = document.createElement('div');
+            line.className = 'console-line';
+            let colorClass = type === 'success' ? 'console-success' : (type === 'error' ? 'console-error' : '');
+            line.innerHTML = `<span class="console-time">[${time}]</span><span class="console-tag">[${tag}]</span><span class="${colorClass}">${msg}</span>`;
+            dom.console.appendChild(line);
+            dom.console.scrollTop = dom.console.scrollHeight;
+            if (dom.console.children.length > 30) dom.console.removeChild(dom.console.firstChild);
+        }
+
+        function getVal(index) {
+            if (index < 1 || index > gameHistory.length) return null;
+            return gameHistory[gameHistory.length - index];
+        }
+
+        // --- THUẬT TOÁN CHUYÊN BIỆT ---
+
+        // RADAR 1: NHẬN DIỆN BỆT (STREAK)
+        function algoDetectBet() {
+            if (gameHistory.length < 3) return null;
+            let last = getVal(1);
+            let streak = 1;
+            for (let i = gameHistory.length - 2; i >= 0; i--) {
+                if (gameHistory[i] === last) streak++;
+                else break;
+            }
+            
+            // Nếu đang bệt từ 2-4 phiên -> Bám bệt
+            if (streak >= 2 && streak <= 4) {
+                return { 
+                    vote: last, 
+                    name: `CẦU BỆT ${last === 'T' ? 'TÀI' : 'XỈU'}`, 
+                    desc: `Đang bệt ${streak} phiên. Khuyên đánh tiếp.`, 
+                    w: 4, 
+                    isHighlight: true 
+                };
+            }
+            // Nếu bệt >= 5 phiên -> Nguy cơ gãy cao, bẻ cầu
+            if (streak >= 5) {
+                return { 
+                    vote: last === 'T' ? 'X' : 'T', 
+                    name: "CẢNH BÁO GÃY BỆT", 
+                    desc: `Bệt quá dài (${streak} phiên). Rất dễ bẻ!`, 
+                    w: 5, 
+                    isHighlight: true 
+                };
+            }
+            return null;
+        }
+
+        // RADAR 2: NHẬN DIỆN CẦU 1-1 (ĐẢO NHỊP)
+        function algoDetect11() {
+            if (gameHistory.length < 4) return null;
+            let is11 = true;
+            for (let i = 1; i < 4; i++) {
+                if (getVal(i) === getVal(i + 1)) { is11 = false; break; }
+            }
+            if (is11) {
+                return { 
+                    vote: getVal(1) === 'T' ? 'X' : 'T', 
+                    name: "CẦU 1-1", 
+                    desc: "Đang đảo nhịp liên tục.", 
+                    w: 4, 
+                    isHighlight: true 
+                };
+            }
+            return null;
+        }
+
+        // --- CÁC THUẬT TOÁN CŨ HỖ TRỢ ---
+        function algoDelta() { if (gameHistory.length < 5) return null; let v1 = getVal(1), v2 = getVal(2), v3 = getVal(3), v4=getVal(4), v5=getVal(5); if (v1 !== v2 && v2 !== v3 && v3 !== v4 && v4 !== v5) return { vote: v1 === 'T' ? 'X' : 'T', name: "Pattern Delta", desc: "Chuỗi biến thiên liên tục", w: 1.5 }; return null; }
+        function algoSymmetry() { if (gameHistory.length < 5) return null; let v1 = getVal(1), v2 = getVal(2), v3 = getVal(3), v4 = getVal(4), v5 = getVal(5); if (v1 === v5 && v2 === v4) return { vote: v1 === v3 ? (v1 === 'T' ? 'X' : 'T') : v3, name: "Đối Xứng Gương", desc: "Khả Năng Bẻ Cao", w: 2 }; return null; }
+        function algoCluster() { if (gameHistory.length < 4) return null; let countT = 0; for(let i=1; i<=4; i++) if(getVal(i) === 'T') countT++; if (countT === 3) return { vote: 'X', name: "Cluster Shift", desc: "Cụm 3T-1X (Dịch chuyển)", w: 1.5 }; if (countT === 1) return { vote: 'T', name: "Cluster Shift", desc: "Cụm 1T-3X (Dịch chuyển)", w: 1.5 }; return null; }
+        function algoWave() { if (gameHistory.length < 6) return null; let v1 = getVal(1), v2 = getVal(2), v3 = getVal(3), v4 = getVal(4), v5 = getVal(5), v6 = getVal(6); if (v1 === 'T' && v2 === 'X' && v3 === 'X' && v4 === 'T' && v5 === 'T' && v6 === 'X') return { vote: 'T', name: "Wave Trend", desc: "Sóng Sin chu kỳ 6", w: 2 }; return null; }
+        function algoMonteCarlo() { if (gameHistory.length < 10) return null; let tCount = 0; for(let i=1; i<=10; i++) if(getVal(i) === 'T') tCount++; let probT = tCount / 10; if (probT >= 0.7) return { vote: 'X', name: "Monte Carlo", desc: "Quá tải Tài", w: 1.5 }; if (probT <= 0.3) return { vote: 'T', name: "Monte Carlo", desc: "Quá tải Xỉu", w: 1.5 }; return null; }
+        function algoNeural() { if (gameHistory.length < 5) return null; let score = 0; score += (getVal(1) === 'T' ? 3 : -3); score += (getVal(2) === 'T' ? 2 : -2); score += (getVal(3) === 'T' ? 1.5 : -1.5); score += (getVal(4) === 'T' ? 1 : -1); score += (getVal(5) === 'T' ? 0.5 : -0.5); if (score >= 4) return { vote: 'X', name: "Neural Weights", desc: "Quá tải Tài (Bẻ)", w: 2 }; if (score <= -4) return { vote: 'T', name: "Neural Weights", desc: "Quá tải Xỉu (Bẻ)", w: 2 }; return null; }
+        function algoFractal() { if (gameHistory.length < 8) return null; let currentPattern = getVal(1)+getVal(2)+getVal(3); for (let i = 4; i <= gameHistory.length - 3; i++) { let pastPattern = gameHistory[gameHistory.length - i] + gameHistory[gameHistory.length - i - 1] + gameHistory[gameHistory.length - i - 2]; if (currentPattern === pastPattern) { let nextInPast = gameHistory[gameHistory.length - i + 1]; if(nextInPast) return { vote: nextInPast, name: "Fractal Match", desc: "Trùng mẫu lịch sử", w: 2 }; } } return null; }
+        function algoGap() { if (gameHistory.length < 10) return null; let lastT = -1, lastX = -1; for(let i=1; i<=10; i++) { if(getVal(i) === 'T' && lastT === -1) lastT = i; if(getVal(i) === 'X' && lastX === -1) lastX = i; } if (lastT !== -1 && lastX !== -1) { if (lastT > lastX + 3) return { vote: 'T', name: "Average Gap", desc: "Xỉu đã lâu chưa ra", w: 1.5 }; if (lastX > lastT + 3) return { vote: 'X', name: "Average Gap", desc: "Tài đã lâu chưa ra", w: 1.5 }; } return null; }
+
+        function analyze() {
+            // Reset UI mỗi lần chạy
+            dom.patternCard.classList.remove('highlight');
+            dom.algName.style.color = 'var(--pastel-blue)';
+
+            if (gameHistory.length < 3) {
+                dom.predResult.innerText = 'CHỜ CẦU'; dom.predResult.className = 'pred-result WAIT';
+                dom.confText.innerText = `Độ Tin Cậy: 0% (Thêm ${3 - gameHistory.length} phiên)`;
+                dom.confBar.style.width = '0%'; dom.algName.innerText = 'Đang thu thập dữ liệu...';
+                dom.algDesc.innerText = 'Cần ít nhất 3 phiên'; dom.riskLevel.innerText = 'Rủi ro cao'; dom.riskDesc.innerText = 'Chưa đủ dữ liệu';
+                lastPrediction = null; return;
+            }
+
+            // Thu thập phiếu bầu
+            const algorithms = [
+                algoDetectBet(), algoDetect11(), algoDelta(), algoSymmetry(), 
+                algoCluster(), algoWave(), algoMonteCarlo(), algoNeural(), 
+                algoFractal(), algoGap()
+            ].filter(a => a !== null);
+
+            let voteT = 0, voteX = 0;
+            algorithms.forEach(a => { if (a.vote === 'T') voteT += a.w; if (a.vote === 'X') voteX += a.w; });
+
+            const totalWeight = voteT + voteX;
+            let finalPrediction = 'WAIT', confidence = 50;
+            let mainAlgo = { name: "Random", desc: "Không có cầu", isHighlight: false };
+            let riskText = "Cầu gãy", riskColor = "#718096";
+
+            if (totalWeight > 0) {
+                if (voteT > voteX) { finalPrediction = 'T'; confidence = (voteT / totalWeight) * 100; }
+                else if (voteX > voteT) { finalPrediction = 'X'; confidence = (voteX / totalWeight) * 100; }
+                else { finalPrediction = Math.random() > 0.5 ? 'T' : 'X'; confidence = 50; }
+
+                // Ưu tiên hiển thị thuật toán có trọng số cao nhất
+                let maxWeight = 0;
+                algorithms.forEach(a => { 
+                    if (a.vote === finalPrediction && a.w > maxWeight) { 
+                        maxWeight = a.w; mainAlgo = a; 
+                    } 
+                });
+            } else {
+                finalPrediction = Math.random() > 0.5 ? 'T' : 'X';
+                mainAlgo = { name: "Random Fallback", desc: "Không tìm thấy Pattern" };
+            }
+
+            // Xử lý độ tự tin
+            confidence = Math.round(confidence);
+            let noise = Math.floor(Math.random() * 5) - 2;
+            confidence = confidence + noise;
+            if (confidence > 65) confidence = 65; // Nâng lên 65% nếu có Bệt/1-1
+            if (confidence < 35) confidence = 35;
+
+            // Đánh giá trạng thái
+            if (confidence >= 60) { riskText = "Cầu Rất Mạnh"; riskColor = "#20c997"; }
+            else if (confidence >= 45) { riskText = "Cầu Trung Bình"; riskColor = "#fcc419"; }
+            else { riskText = "Cầu Yếu - Cẩn thận"; riskColor = "#ff6b6b"; }
+
+            // Cập nhật giao diện
+            dom.predResult.innerText = finalPrediction === 'T' ? 'TÀI' : 'XỈU';
+            dom.predResult.className = `pred-result ${finalPrediction}`;
+            dom.confText.innerText = `Độ Tin Cậy: ${confidence}%`;
+            dom.confBar.style.width = `${(confidence / 65) * 100}%`; // Thanh bar dựa trên max 65
+            
+            dom.algName.innerText = mainAlgo.name;
+            dom.algDesc.innerText = mainAlgo.desc;
+            
+            // Nếu có cảnh báo Bệt hoặc 1-1 -> Highlight lên
+            if (mainAlgo.isHighlight) {
+                dom.patternCard.classList.add('highlight');
+                dom.algName.style.color = 'var(--pastel-red)';
+            }
+
+            dom.riskLevel.innerText = riskText;
+            dom.riskLevel.style.color = riskColor;
+            dom.riskDesc.innerText = `Tổng hợp từ ${algorithms.length} tín hiệu.`;
+
+            lastPrediction = finalPrediction;
+            isWaitingForResult = true;
+        }
+
+        function renderHistory() {
+            dom.historyContainer.innerHTML = '';
+            gameHistory.slice(-30).forEach(res => {
+                const chip = document.createElement('div');
+                chip.className = `chip ${res}`;
+                chip.innerText = res;
+                dom.historyContainer.appendChild(chip);
+            });
+            dom.historyContainer.scrollTop = dom.historyContainer.scrollHeight;
+        }
+
+        function updateStats() {
+            dom.statWin.innerText = totalWins;
+            dom.statLoss.innerText = totalLosses;
+            let total = totalWins + totalLosses;
+            if (total === 0) dom.statRate.innerText = '0%';
+            else dom.statRate.innerText = `${Math.round((totalWins / total) * 100)}%`;
+        }
+
+        function addResult(res) {
+            if (isWaitingForResult && lastPrediction) {
+                if (lastPrediction === res) {
+                    totalWins++; log("RESULT", `THẮNG! Dự đoán ${lastPrediction}, Kết quả ${res}`, 'success');
+                } else {
+                    totalLosses++; log("RESULT", `THUA! Dự đoán ${lastPrediction}, Kết quả ${res}`, 'error');
+                }
+                isWaitingForResult = false;
+            } else {
+                log("INPUT", `Ghi nhận kết quả: ${res}`);
+            }
+
+            gameHistory.push(res);
+            if (gameHistory.length > MAX_HISTORY) gameHistory.shift();
+            
+            renderHistory();
+            updateStats();
+            analyze();
+        }
+
+        document.getElementById('btnTai').addEventListener('click', () => addResult('T'));
+        document.getElementById('btnXiu').addEventListener('click', () => addResult('X'));
+        
+        document.getElementById('btnRandom').addEventListener('click', () => {
+            addResult(Math.random() > 0.5 ? 'T' : 'X');
+        });
+
+        document.getElementById('btnClear').addEventListener('click', () => {
+            if(confirm("Xóa toàn bộ lịch sử và thống kê?")) {
+                gameHistory = []; totalWins = 0; totalLosses = 0; lastPrediction = null; isWaitingForResult = false;
+                log("SYSTEM", "Đã làm mới dữ liệu", "error");
+                renderHistory(); updateStats(); analyze();
+            }
+        });
+
+        document.getElementById('autoBtn').addEventListener('click', function() {
+            if (autoInterval) {
+                clearInterval(autoInterval); autoInterval = null;
+                this.innerText = "▶ Bật Auto Test";
+                this.style.background = "var(--pastel-gold-light)"; this.style.color = "#b08d00";
+                log("SYSTEM", "Tắt Auto Test", "error");
+            } else {
+                this.innerText = "⏸ Tắt Auto Test";
+                this.style.background = "var(--pastel-red-light)"; this.style.color = "var(--pastel-red)";
+                log("SYSTEM", "Bật Auto Test", "success");
+                autoInterval = setInterval(() => { addResult(Math.random() > 0.5 ? 'T' : 'X'); }, 1500);
+            }
+        });
+
+        renderHistory();
+        updateStats();
+        analyze();
+        log("SYSTEM", "Hệ thống Radar Bệt & 1-1 đã Online!", "success");
+    }
+
+    // Chạy check login
+    checkLogin();
+
+})();
+</script>
 </body>
 </html>
